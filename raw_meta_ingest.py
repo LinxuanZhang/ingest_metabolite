@@ -20,12 +20,12 @@ def process_file(file_name):
     response = requests.get(download_url)
     if response.status_code == 200:
         # Write the content to a TSV file
-        with open('data.tsv', 'wb') as file:
+        with open(f'{file_name}.tsv', 'wb') as file:
             file.write(response.content)
         print(f"The {file_name} file has been downloaded successfully.")
 
         try:
-            df = pl.read_csv('data.tsv', separator='\t')
+            df = pl.read_csv(f'{file_name}.tsv', separator='\t')
             df = (
                 df
                 .rename({
@@ -50,6 +50,8 @@ def process_file(file_name):
                 partition_df.write_parquet(buffer)
                 buffer.seek(0)
                 s3_client.put_object(Bucket='primula-genetic-consulting-datalake', Key=partition_key, Body=buffer)
+
+            os.remove(f'{file_name}.tsv')
             print(f"The {file_name} file has been uploaded successfully.")
         except:
             print(f"The {file_name} file failed.")
